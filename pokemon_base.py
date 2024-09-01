@@ -22,6 +22,6 @@ class PokemonBaseScrapper(scrapy.Spider):
       'name': response.css('#main > h1::text').get(),
       'url': response.url,
       'height': response.css('#main > .tabset-basics > .sv-tabs-panel-list > .active .vitals-table > tbody > tr:nth-child(4) > td::text').get(),
-      'width': response.css('#main > .tabset-basics > .sv-tabs-panel-list > .active .vitals-table > tbody > tr:nth-child(5) > td::text').get(),
+      'weight': response.css('#main > .tabset-basics > .sv-tabs-panel-list > .active .vitals-table > tbody > tr:nth-child(5) > td::text').get(),
       'types': response.css('#main > .tabset-basics > .sv-tabs-panel-list > .active .vitals-table > tbody > tr:nth-child(2) > td > a::text').getall()
     }
