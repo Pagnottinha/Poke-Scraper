@@ -17,8 +17,6 @@ class PokemonBaseScrapper(scrapy.Spider):
       yield response.follow(self.domain + link, self.parse_pokemon)
 
   def parse_pokemon(self, response: scrapy.http.HtmlResponse):
-    with open("response.html", "wb") as f:
-        f.write(response.body)
     yield {
       'id': response.css('#main > .tabset-basics > .sv-tabs-panel-list > .active .vitals-table > tbody > tr:nth-child(1) > td > strong::text').get(),
       'name': response.css('#main > h1::text').get(),
