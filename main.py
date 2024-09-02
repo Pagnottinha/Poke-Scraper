@@ -1,5 +1,7 @@
 ### Onde vai ocorrer a junção dos csv
 import pandas as pd
+import numpy as np
+import json
 import ast
 import re
 
@@ -27,7 +29,7 @@ def combine_abilities(abilities):
         combined.append({'url': url, 'name': name, 'description': description})
     return combined
 
-#Agrupar por ID e combinar as habilidades
+# Agrupar por ID e combinar as habilidades
 def aggregate(group):
     # Unir evoluções em uma lista de dicionários
     evolutions = group['evolutions'].iloc[0] if not group['evolutions'].isnull().all() else []
@@ -49,17 +51,46 @@ def aggregate(group):
     }
     return result
 
+def filter_evolutions(row):
+    pokemon_name = row['name']
+    evolutions = row['evolution']
+    start_save = False
+    array_evolutions = []
+
+    print(f'Pokemon: {pokemon_name}\nEvolutions: {evolutions}')
+    if evolutions != None:
+        for evolution in evolutions:
+            if start_save:
+                array_evolutions.append(evolution)
+            if pokemon_name == evolution['name']:
+                start_save = True
+
+    return [evo for evo in array_evolutions if evo['name'] != pokemon_name]
+            
+
 df = pd.read_csv('data.csv')
 df.dropna(inplace=True)
+
+df_evolutions = pd.read_csv('data_evolution.csv')
+
+df['evolution'] = None
+
+for i, row in df_evolutions.iterrows():
+    evolutions = json.loads(re.sub(r"(?<=[:,\[{])\s*'(.*?)'\s*(?=[}\],:])", r'"\1"', row['evolutions']))
+    
+    for evolution in evolutions:
+        for index, df_row in df.iterrows():
+            if evolution['name'] == df_row['name']:
+                if df.at[index, 'evolution'] is None:
+                    df.at[index, 'evolution'] = []
+                for evolution in evolutions:     
+                    df.at[index, 'evolution'].append(evolution)
+
 
 df['height'] = df['height'].apply(extract_cm)
 df['weight'] = df['weight'].apply(extract_kg)
 
-df['evolutions'] = df['evolutions'].apply(lambda x: ast.literal_eval(x))
-df['abilities'] = df['abilities'].apply(lambda x: ast.literal_eval(x))
+df['evolution'] = df.apply(lambda row: filter_evolutions(row), axis=1)
 
-# Aplicar agregação
-df_grouped = df.groupby('id').apply(aggregate).apply(pd.Series)
-df_grouped.to_json('pokemon_data.json', orient='records')
+df.to_json('pokemon_data.json', orient='records', indent=4)
 
-print(df_grouped)
