@@ -1,6 +1,3 @@
-# https://www.analyticsvidhya.com/blog/2017/07/web-scraping-in-python-using-scrapy/
-# https://www.digitalocean.com/community/tutorials/como-fazer-crawling-em-uma-pagina-web-com-scrapy-e-python-3-pt
-# http://pythonclub.com.br/material-do-tutorial-web-scraping-na-nuvem.html
 import scrapy
 
 class PokeAbilitySpider(scrapy.Spider):

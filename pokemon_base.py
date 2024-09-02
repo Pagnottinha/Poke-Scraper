@@ -1,5 +1,3 @@
-# https://www.digitalocean.com/community/tutorials/como-fazer-crawling-em-uma-pagina-web-com-scrapy-e-python-3-pt
-# http://pythonclub.com.br/material-do-tutorial-web-scraping-na-nuvem.html
 import scrapy
 
 class PokemonBaseScrapper(scrapy.Spider):
@@ -10,7 +8,6 @@ class PokemonBaseScrapper(scrapy.Spider):
   def parse(self, response: scrapy.http.HtmlResponse):
     pokemons = response.css('#pokedex > tbody > tr')
     for pokemon in pokemons:
-    #pokemon = pokemons[0]
       link = pokemon.css("td.cell-name > a::attr(href)").extract_first()
       yield response.follow(self.domain + link, self.parse_pokemon)
 

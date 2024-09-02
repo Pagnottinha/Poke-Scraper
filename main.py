@@ -5,6 +5,11 @@ import json
 import ast
 import re
 
+## o caminho vai depender onde você deixou o csv
+evolution_path = 'data_evolution.csv'
+base_path = 'data.csv'
+abilities_path = 'data_abilities.csv'
+
 # Função de extrair somente o valor em kg
 def extract_kg(weight_text):
     match = re.search(r'(\d+\.?\d*)\s*kg', weight_text)
@@ -34,15 +39,14 @@ def filter_evolutions(row):
 
     return [evo for evo in array_evolutions if evo['name'] != pokemon_name]
             
-
-df_pokemons = pd.read_csv('data.csv')
+df_pokemons = pd.read_csv(base_path)
 df_pokemons.dropna(inplace=True)
 
 df_pokemons['id'] = df_pokemons['id'].apply(lambda x: int(x))
 df_pokemons['height'] = df_pokemons['height'].apply(extract_cm)
 df_pokemons['weight'] = df_pokemons['weight'].apply(extract_kg)
 
-df_abilities = pd.read_csv('data_abilities.csv')
+df_abilities = pd.read_csv(abilities_path)
 df_abilities.dropna(inplace=True)
 
 df_abilities['pokemons'] = df_abilities['pokemons'].apply(lambda x: ast.literal_eval(x))
@@ -50,7 +54,6 @@ df_abilities_expanded = df_abilities.explode('pokemons')
 df_abilities_expanded.drop_duplicates()
 
 merged_df = pd.merge(df_pokemons, df_abilities_expanded, left_on='id', right_on='pokemons')
-# print(merged_df)
 
 merged_df['abilities'] = merged_df.apply(
     lambda row: {
@@ -63,12 +66,11 @@ merged_df['abilities'] = merged_df.apply(
 
 merged_df = merged_df.drop(columns=['pokemons', 'ability_name', 'description', 'ability_url'])
 
-# Agrupa as habilidades de cada Pokémon em uma lista
 df = merged_df.groupby(['id', 'name', 'url', 'height', 'weight', 'types']).agg({
     'abilities': list
 }).reset_index()
 
-df_evolutions = pd.read_csv('data_evolution.csv')
+df_evolutions = pd.read_csv(evolution_path)
 
 df['evolution'] = None
 
