@@ -18,8 +18,24 @@ O que devemos buscar de cada Pokémon obrigatoriamente:
 
 Pode puxar mais dados, mas são opcionais.
 
-## Utilização das spiders
+### Como rodar o projeto
+
+1. Instale as dependencias.
+
+```
+pip install -r requirements.txt
+```
+
+2. Rode os spiders (scrapers).
+
+- Utilização das spiders
 
 ```
 scrapy runspider nome_arquivo.py -o nome_saida.csv
+```
+
+3. Atualize as variáveis de caminho e execute o main.py (o tratamento desses dados)
+
+```
+python main.py
 ```
