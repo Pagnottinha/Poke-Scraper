@@ -19,45 +19,12 @@ def extract_cm(height_text):
         return str(round(float(match.group(1)) * 100, 1)) + ' cm' 
     return None
 
-#Função para combinar habilidades
-def combine_abilities(abilities):
-    combined = []
-    for ability in abilities:
-        url = ability['url']
-        name = ability['name'].strip()
-        description = ability['description'].strip()
-        combined.append({'url': url, 'name': name, 'description': description})
-    return combined
-
-# Agrupar por ID e combinar as habilidades
-def aggregate(group):
-    # Unir evoluções em uma lista de dicionários
-    evolutions = group['evolutions'].iloc[0] if not group['evolutions'].isnull().all() else []
-    
-    # Combinar habilidades
-    combined_abilities = []
-    for abilities in group['abilities']:
-        combined_abilities.extend(combine_abilities([abilities]))
-    
-    # Construir o resultado
-    result = {
-        'name': group['name'].iloc[0],
-        'url_pokemon': group['url_pokemon'].iloc[0],
-        'height': group['height'].iloc[0],
-        'weight': group['weight'].iloc[0],
-        'types': group['types'].iloc[0],
-        'evolutions': evolutions,
-        'abilities': combined_abilities
-    }
-    return result
-
 def filter_evolutions(row):
     pokemon_name = row['name']
     evolutions = row['evolution']
     start_save = False
     array_evolutions = []
 
-    print(f'Pokemon: {pokemon_name}\nEvolutions: {evolutions}')
     if evolutions != None:
         for evolution in evolutions:
             if start_save:
@@ -68,8 +35,38 @@ def filter_evolutions(row):
     return [evo for evo in array_evolutions if evo['name'] != pokemon_name]
             
 
-df = pd.read_csv('data.csv')
-df.dropna(inplace=True)
+df_pokemons = pd.read_csv('data.csv')
+df_pokemons.dropna(inplace=True)
+
+df_pokemons['id'] = df_pokemons['id'].apply(lambda x: int(x))
+df_pokemons['height'] = df_pokemons['height'].apply(extract_cm)
+df_pokemons['weight'] = df_pokemons['weight'].apply(extract_kg)
+
+df_abilities = pd.read_csv('data_abilities.csv')
+df_abilities.dropna(inplace=True)
+
+df_abilities['pokemons'] = df_abilities['pokemons'].apply(lambda x: ast.literal_eval(x))
+df_abilities_expanded = df_abilities.explode('pokemons')
+df_abilities_expanded.drop_duplicates()
+
+merged_df = pd.merge(df_pokemons, df_abilities_expanded, left_on='id', right_on='pokemons')
+# print(merged_df)
+
+merged_df['abilities'] = merged_df.apply(
+    lambda row: {
+        'ability': row['ability_name'], 
+        'description': row['description'],
+        'ability_url': row['ability_url'],
+    },
+    axis=1
+)
+
+merged_df = merged_df.drop(columns=['pokemons', 'ability_name', 'description', 'ability_url'])
+
+# Agrupa as habilidades de cada Pokémon em uma lista
+df = merged_df.groupby(['id', 'name', 'url', 'height', 'weight', 'types']).agg({
+    'abilities': list
+}).reset_index()
 
 df_evolutions = pd.read_csv('data_evolution.csv')
 
@@ -83,14 +80,11 @@ for i, row in df_evolutions.iterrows():
             if evolution['name'] == df_row['name']:
                 if df.at[index, 'evolution'] is None:
                     df.at[index, 'evolution'] = []
-                for evolution in evolutions:     
-                    df.at[index, 'evolution'].append(evolution)
+                for evolution in evolutions:
+                    if evolution not in df.at[index, 'evolution']:  
+                        df.at[index, 'evolution'].append(evolution)
 
-
-df['height'] = df['height'].apply(extract_cm)
-df['weight'] = df['weight'].apply(extract_kg)
 
 df['evolution'] = df.apply(lambda row: filter_evolutions(row), axis=1)
 
 df.to_json('pokemon_data.json', orient='records', indent=4)
-
