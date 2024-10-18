@@ -66,7 +66,7 @@ merged_df['abilities'] = merged_df.apply(
 
 merged_df = merged_df.drop(columns=['pokemons', 'ability_name', 'description', 'ability_url'])
 
-df = merged_df.groupby(['id', 'name', 'url', 'height', 'weight', 'types']).agg({
+df = merged_df.groupby(['id', 'name', 'url', 'color', 'height', 'weight', 'types']).agg({
     'abilities': list
 }).reset_index()
 
